@@ -1,17 +1,37 @@
+import { FormEvent, useState } from 'react'
 import Head from 'next/head'
 import Image from 'next/image'
+import { toast } from 'react-toastify'
 
 import logoImg from './../assets/logo.svg'
 import usersAvatarImg from './../assets/users-avatar-example.png'
 import iconCheckImg from './../assets/icon-check.svg'
 import appPreviewImg from './../assets/app-nlw-copa-preview.png'
-// import { api } from '../services/api'
+import { api } from '../services/api'
 
-// type HomeProps = {
-//   count: number
-// }
+type HomeProps = {
+  poolCount: number
+  guessCount: number,
+  usersCount: number
+}
 
-export default function Home () {
+export default function Home ({ poolCount, guessCount, usersCount }: HomeProps) {
+  const [poolTitle, setPoolTitle] = useState('')
+  const handleCreatePool = async (event: FormEvent) => {
+    event.preventDefault()
+    try {
+      const { data } = await api.post('/pools', {
+        title: poolTitle
+      })
+      await navigator.clipboard.writeText(data.code)
+      toast.success('Bolão criado com sucesso, o código foi copiado para a àrea de transferência!')
+      setPoolTitle('')
+    } catch (error) {
+      console.log(error)
+      toast.error('Falha ao criar o bolão, tente novamente!')
+    }
+  }
+
   return (
     <>
       <Head>
@@ -33,16 +53,18 @@ export default function Home () {
               width={118}
             />
             <strong className="text-xl text-gray-100">
-              <span className="text-ignite-500">+12.592 </span>
+              <span className="text-ignite-500">+{usersCount} </span>
               pessoas já estão usando
             </strong>
           </div>
 
-          <form className="flex gap-2 mt-10">
+          <form onSubmit={handleCreatePool} className="flex gap-2 mt-10">
             <input
               type="text"
               placeholder="Qual é o nome do seu bolão?"
-              className="flex-1 text-sm px-6 py-4 bg-gray-800 border border-gray-600 rounded"
+              className="flex-1 text-sm text-gray-100 px-6 py-4 bg-gray-800 border border-gray-600 rounded"
+              value={poolTitle}
+              onChange={event => setPoolTitle(event.target.value)}
             />
             <button
               type="submit"
@@ -64,7 +86,7 @@ export default function Home () {
                 alt="Circulo verde com um v no meio"
               />
               <div className="flex flex-col">
-                <span className="text-2xl font-bold">+2.034</span>
+                <span className="text-2xl font-bold">+{poolCount}</span>
                 <span>Bolões criados</span>
               </div>
             </div>
@@ -77,7 +99,7 @@ export default function Home () {
                 alt="Circulo verde com um v no meio"
               />
               <div className="flex flex-col">
-                <span className="text-2xl font-bold">+192.847</span>
+                <span className="text-2xl font-bold">+{guessCount}</span>
                 <span>Palpites enviados</span>
               </div>
             </div>
@@ -93,12 +115,18 @@ export default function Home () {
   )
 }
 
-// export const getServerSideProps = async () => {
-//   const { data } = await api.get('/pools/count')
+export const getServerSideProps = async () => {
+  const [poolCountResponse, guessCountResponse, usersCountResponse] = await Promise.all([
+    api.get('/pools/count'),
+    api.get('/guesses/count'),
+    api.get('/users/count')
+  ])
 
-//   return {
-//     props: {
-//       count: data.count
-//     }
-//   }
-// }
+  return {
+    props: {
+      poolCount: poolCountResponse.data.count,
+      guessCount: guessCountResponse.data.count,
+      usersCount: usersCountResponse.data.count
+    }
+  }
+}
