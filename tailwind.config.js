@@ -5,8 +5,8 @@ module.exports = {
   ],
   theme: {
     extend: {
-      fontFamily: {
-        sans: ['Roboto', 'sans-serif']
+      backgroundImage: {
+        app: 'url(/app-bg.png)'
       },
       colors: {
         gray: {
@@ -23,6 +23,9 @@ module.exports = {
           700: '#E5CD3D',
           500: '#F7DD43'
         }
+      },
+      fontFamily: {
+        sans: ['Roboto', 'sans-serif']
       }
     }
   },
